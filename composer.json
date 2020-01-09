@@ -5,7 +5,7 @@
   "homepage": "https://www.drupal.org/project/elastic_apm",
   "license": "GPL-3.0+",
   "require": {
-    "philkra/elastic-apm-php-agent": "~6.5.8"
+    "philkra/elastic-apm-php-agent": ">=7.0.0"
   },
   "patches": {
     "drupal/core": {

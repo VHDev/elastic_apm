@@ -9,7 +9,7 @@ phpAgent:
   secretToken: ''
   hostname: ''
   timeout: 5
-  apmVersion: 'v1'
+  apmVersion: 'v2'
   env: []
   cookies: []
   httpClient:
