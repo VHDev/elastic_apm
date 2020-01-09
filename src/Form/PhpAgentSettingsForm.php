@@ -58,7 +58,7 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Secret token'),
       '#default_value' => $config->get('phpAgent.secretToken'),
       '#description' => $this->t('Secret token for APM server'),
-      '#required' => TRUE,
+      '#required' => FALSE,
     ];
 
     $form['connection']['host_name'] = [
