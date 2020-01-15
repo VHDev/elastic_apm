@@ -217,14 +217,39 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     try {
       // Capture database queries as spans and stop the transaction.
-      $transaction = $this->phpAgent->getTransaction(
-        $this->routeMatch->getRouteName()
-      );
-      $transaction->setSpans($this->constructDatabaseSpans());
-      $transaction->stop();
+      $routeName = $this->routeMatch->getRouteName();
+      $transaction = $this->phpAgent->getTransaction($routeName);
+
+      // Spans
+      // get the spans & create an event for each
+      $spans = $this->constructDatabaseSpans();
+
+      // Create span event
+      $spanParent = $this->phpAgent->factory()->newSpan('DB Query Span', $transaction);
+      $spanParent->start();
+
+      foreach($spans as $span) {
+
+        // Lookup the User 'foobar' in the database
+        $spanDb = $this->phpAgent->factory()->newSpan($span['name'], $spanParent);
+        // $parent->incSpanCount();
+        $spanDb->setType($span['type']);
+        $spanDb->setAction($span['action']);
+        $spanDb->start();
+
+        usleep(rand(100, 300));
+
+        $spanDb->setContext($span['context']);
+        $spanDb->setStackTrace($span['stacktrace']);
+        $spanDb->stop();
+        $this->phpAgent->putEvent($spanDb);
+      }
+      $spanParent->stop();
 
       // Send our transaction to Elastic.
-      $this->phpAgent->send();
+      $this->phpAgent->putEvent($spanParent);
+
+      $this->phpAgent->stopTransaction($routeName);
     }
     catch (Exception $e) {
       // Log the error.
@@ -284,13 +309,14 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // With the Drupal core patch required by this module (beta1+) we have the
     // start time of the query available.
-    $start = $query['start'] - $this->time->getRequestMicroTime();
+    // $start = $query['start'] - $this->time->getRequestMicroTime();
 
     // Add the necessary schema info for the APM server.
     $span['name'] = $query['caller']['class'] . '::' . $query['caller']['function'];
     $span['type'] = 'db.' . $driver . '.query';
-    $span['start'] = $start * 1000;
-    $span['duration'] = $query['time'] * 1000;
+    $span['action'] = 'query';
+    // $span['start'] = $start * 1000;
+    // $span['duration'] = $query['time'] * 1000;
     $span['context'] = [
       'db' => [
         'instance' => $connection,
