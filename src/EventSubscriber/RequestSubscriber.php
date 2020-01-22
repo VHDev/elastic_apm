@@ -161,10 +161,15 @@ class RequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $routeName = $this->routeMatch->getRouteName();
+    if (empty($routeName)||($routeName == '<none>')) {
+      return;
+    }
+
     try {
       // Start a new transaction.
       $this->phpAgent->startTransaction(
-        $this->routeMatch->getRouteName(),
+        $routeName,
         [],
         $this->time->getRequestMicroTime()
       );
@@ -215,9 +220,13 @@ class RequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    $routeName = $this->routeMatch->getRouteName();
+    if (empty($routeName)||($routeName == '<none>')) {
+      return;
+    }
+
     try {
       // Capture database queries as spans and stop the transaction.
-      $routeName = $this->routeMatch->getRouteName();
       $transaction = $this->phpAgent->getTransaction($routeName);
 
       // Spans
@@ -409,7 +418,10 @@ class RequestSubscriber implements EventSubscriberInterface {
     $tags = [];
 
     // Fetch the current path from route object.
-    $route = $this->routeMatch->getRouteName();
+    $routeName = $this->routeMatch->getRouteName();
+    if (empty($routeName)||($routeName == '<none>')) {
+      return [];
+    }
 
     // Fetch the configured path patterns.
     $tag_config = $this->apiService->getTagConfig();
@@ -425,7 +437,7 @@ class RequestSubscriber implements EventSubscriberInterface {
     foreach ($patterns as $pattern) {
       // If the configured route does not match with the current route
       // continue to look for the next pattern.
-      if (!$this->matchRoute($route, $pattern['pattern'])) {
+      if (!$this->matchRoute($routeName, $pattern['pattern'])) {
         continue;
       }
 
