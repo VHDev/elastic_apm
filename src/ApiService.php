@@ -233,7 +233,9 @@ class ApiService implements ApiServiceInterface {
     $negate = (bool) $config['paths']['negate'];
 
     // Get the current path.
-    $path = $this->routeMatch->getRouteObject()->getPath();
+    $route_obj = $this->routeMatch->getRouteObject();
+    if (empty($route_obj)) { return NULL; }
+    $path = $route_obj->getPath();
 
     // Do not trim a trailing slash if that is the complete path.
     $path = $path === '/' ? $path : rtrim($path, '/');

@@ -357,7 +357,9 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected function prepareAgentOptions() {
     $tags = [];
 
-    $route_options = $this->routeMatch->getRouteObject()->getOptions();
+    $route_obj = $this->routeMatch->getRouteObject();
+    if (empty($route_obj)) { return $tags; }
+    $route_options = $route_obj->getOptions();
     if (isset($route_options['_admin_route'])) {
       $tags['route-is-admin'] = TRUE;
     }
